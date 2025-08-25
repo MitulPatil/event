@@ -10,23 +10,28 @@ import { getUnreadNotificationCount } from "../../lib/appwrite";
 
 const TabIcon = ({ icon, color, name, focused, badgeCount }) => {
   return (
-    <View className="flex items-center justify-center gap-1 mt-4 relative">
-      <Image
-        source={icon}
-        resizeMode="contain"
-        tintColor={color}
-        className="w-6 h-6"
-      />
-      {badgeCount > 0 && (
-        <View className="absolute -top-1 -right-1 bg-red-500 rounded-full min-w-[18px] h-[18px] flex items-center justify-center">
-          <Text className="text-white text-xs font-bold">
-            {badgeCount > 99 ? '99+' : badgeCount}
-          </Text>
-        </View>
-      )}
+    <View className="flex items-center justify-center py-1 relative min-h-[60px] w-20">
+      <View className="relative">
+        <Image
+          source={icon}
+          resizeMode="contain"
+          tintColor={color}
+          className="w-6 h-6"
+        />
+        {badgeCount > 0 && (
+          <View className="absolute -top-2 -right-2 bg-red-500 rounded-full min-w-[18px] h-[18px] flex items-center justify-center">
+            <Text className="text-white text-xs font-bold">
+              {badgeCount > 99 ? '99+' : badgeCount}
+            </Text>
+          </View>
+        )}
+      </View>
       <Text
-        className={`${focused ? "font-psemibold" : "font-pregular"} text-xs`}
+        className={`${focused ? "font-psemibold" : "font-pregular"} text-xs mt-1 text-center`}
         style={{ color: color }}
+        numberOfLines={1}
+        adjustsFontSizeToFit={true}
+        minimumFontScale={0.8}
       >
         {name}
       </Text>
@@ -69,7 +74,9 @@ const TabLayout = () => {
             backgroundColor: "#161622",
             borderTopWidth: 1,
             borderTopColor: "#232533",
-            height: 100,
+            height: 84,
+            paddingBottom: 8,
+            paddingTop: 8,
           },
         }}
       >
