@@ -25,6 +25,8 @@ const Create = () => {
   const [uploading, setUploading] = useState(false);
   const [activeTab, setActiveTab] = useState("video"); // "video" or "event"
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [pickerMode, setPickerMode] = useState("date"); // "date" or "time"
   
   // Video form state
   const [videoForm, setVideoForm] = useState({
@@ -146,10 +148,63 @@ const Create = () => {
     }
   };
 
+  const showDatePickerModal = () => {
+    if (Platform.OS === 'android') {
+      setPickerMode("date");
+      setShowDatePicker(true);
+    } else {
+      setShowDatePicker(true);
+    }
+  };
+
+  const showTimePickerModal = () => {
+    if (Platform.OS === 'android') {
+      setPickerMode("time");
+      setShowTimePicker(true);
+    }
+  };
+
   const onDateChange = (event, selectedDate) => {
-    const currentDate = selectedDate || eventForm.date;
-    setShowDatePicker(Platform.OS === 'ios');
-    setEventForm({ ...eventForm, date: currentDate });
+    if (Platform.OS === 'ios') {
+      // iOS handles datetime in one picker
+      if (event?.type === 'dismissed') {
+        setShowDatePicker(false);
+        return;
+      }
+      if (selectedDate) {
+        setEventForm({ ...eventForm, date: selectedDate });
+      }
+    } else {
+      // Android - handle date and time separately
+      setShowDatePicker(false);
+      
+      if (event?.type === 'dismissed') {
+        return;
+      }
+      
+      if (selectedDate && pickerMode === "date") {
+        const newDateTime = new Date(eventForm.date);
+        newDateTime.setFullYear(selectedDate.getFullYear());
+        newDateTime.setMonth(selectedDate.getMonth());
+        newDateTime.setDate(selectedDate.getDate());
+        setEventForm({ ...eventForm, date: newDateTime });
+      }
+    }
+  };
+
+  const onTimeChange = (event, selectedTime) => {
+    setShowTimePicker(false);
+    
+    if (event?.type === 'dismissed') {
+      return;
+    }
+    
+    if (selectedTime) {
+      const newDateTime = new Date(eventForm.date);
+      newDateTime.setHours(selectedTime.getHours());
+      newDateTime.setMinutes(selectedTime.getMinutes());
+      setEventForm({ ...eventForm, date: newDateTime });
+    }
   };
 
   const renderVideoForm = () => (
@@ -260,23 +315,94 @@ const Create = () => {
         <Text className="text-base text-gray-100 font-pmedium mb-2">
           Event Date & Time
         </Text>
-        <CustomButton
-          title={eventForm.date.toLocaleDateString() + ' ' + eventForm.date.toLocaleTimeString()}
-          handlePress={() => setShowDatePicker(true)}
-          containerStyles="bg-black-200 border border-black-200"
-          textStyles="text-gray-100"
-        />
+        
+        {Platform.OS === 'ios' ? (
+          // iOS - Single datetime picker
+          <CustomButton
+            title={eventForm.date.toLocaleDateString() + ' ' + eventForm.date.toLocaleTimeString()}
+            handlePress={showDatePickerModal}
+            containerStyles="bg-black-200 border border-black-200"
+            textStyles="text-gray-100"
+          />
+        ) : (
+          // Android - Separate date and time buttons
+          <View className="space-y-3">
+            <View className="flex-row space-x-3">
+              <View className="flex-1">
+                <Text className="text-sm text-gray-300 mb-1">Date</Text>
+                <CustomButton
+                  title={eventForm.date.toLocaleDateString()}
+                  handlePress={showDatePickerModal}
+                  containerStyles="bg-black-200 border border-black-200"
+                  textStyles="text-gray-100 text-sm"
+                />
+              </View>
+              <View className="flex-1">
+                <Text className="text-sm text-gray-300 mb-1">Time</Text>
+                <CustomButton
+                  title={eventForm.date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                  handlePress={showTimePickerModal}
+                  containerStyles="bg-black-200 border border-black-200"
+                  textStyles="text-gray-100 text-sm"
+                />
+              </View>
+            </View>
+            <View className="bg-gray-700 p-3 rounded-lg">
+              <Text className="text-gray-300 text-xs">
+                📅 {eventForm.date.toLocaleDateString()} at {eventForm.date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+              </Text>
+            </View>
+          </View>
+        )}
       </View>
 
+      {/* Date Picker */}
       {showDatePicker && (
-        <DateTimePicker
-          testID="dateTimePicker"
-          value={eventForm.date}
-          mode="datetime"
-          is24Hour={true}
-          display="default"
-          onChange={onDateChange}
-        />
+        <View className="mt-4">
+          {Platform.OS === 'ios' ? (
+            <>
+              <DateTimePicker
+                testID="dateTimePicker"
+                value={eventForm.date}
+                mode="datetime"
+                is24Hour={true}
+                display="spinner"
+                onChange={onDateChange}
+                minimumDate={new Date()}
+              />
+              <CustomButton
+                title="Done"
+                handlePress={() => setShowDatePicker(false)}
+                containerStyles="mt-4 bg-secondary"
+                textStyles="text-black"
+              />
+            </>
+          ) : (
+            <DateTimePicker
+              testID="datePicker"
+              value={eventForm.date}
+              mode="date"
+              is24Hour={true}
+              display="default"
+              onChange={onDateChange}
+              minimumDate={new Date()}
+            />
+          )}
+        </View>
+      )}
+
+      {/* Time Picker - Android only */}
+      {showTimePicker && Platform.OS === 'android' && (
+        <View className="mt-4">
+          <DateTimePicker
+            testID="timePicker"
+            value={eventForm.date}
+            mode="time"
+            is24Hour={true}
+            display="default"
+            onChange={onTimeChange}
+          />
+        </View>
       )}
 
       <FormField
