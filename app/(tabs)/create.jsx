@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { router } from "expo-router";
 import { ResizeMode, Video } from "expo-av";
 import * as DocumentPicker from "expo-document-picker";
@@ -15,7 +15,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { Platform } from 'react-native';
 
 import { icons } from "../../constants";
-import { createVideoPost, createEvent } from "../../lib/appwrite";
+import { createVideoPost, createEvent, checkUserPermissions, canUserCreateEvents, promoteCurrentUserToAdmin, validateDatabaseSchema, testAppwriteConnection } from "../../lib/appwrite";
 import { sendLocalEventNotification } from "../../lib/notificationService";
 import { CustomButton, FormField } from "../../components";
 import { useGlobalContext } from "../../context/GlobalProvider";
@@ -27,6 +27,8 @@ const Create = () => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [pickerMode, setPickerMode] = useState("date"); // "date" or "time"
+  const [canCreateEvents, setCanCreateEvents] = useState(false);
+  const [isCheckingPermissions, setIsCheckingPermissions] = useState(true);
   
   // Video form state
   const [videoForm, setVideoForm] = useState({
@@ -43,6 +45,88 @@ const Create = () => {
     date: new Date(),
     venue: "",
   });
+
+  // Check user permissions on component mount
+  useEffect(() => {
+    const checkEventPermissions = async () => {
+      if (user && user.$id) {
+        try {
+          const permissions = await canUserCreateEvents(user.$id);
+          setCanCreateEvents(permissions.canCreate);
+          console.log("User can create events:", permissions.canCreate);
+          console.log("User role:", permissions.userRole);
+        } catch (error) {
+          console.log("Error checking permissions:", error);
+          setCanCreateEvents(false);
+        } finally {
+          setIsCheckingPermissions(false);
+        }
+      }
+    };
+
+    checkEventPermissions();
+  }, [user]);
+
+  // Function to promote current user to admin (for testing)
+  const handlePromoteToAdmin = async () => {
+    try {
+      setIsCheckingPermissions(true);
+      await promoteCurrentUserToAdmin();
+      Alert.alert("Success", "You have been promoted to admin! Restart the app to see changes.");
+      
+      // Refresh permissions
+      const permissions = await canUserCreateEvents(user.$id);
+      setCanCreateEvents(permissions.canCreate);
+    } catch (error) {
+      Alert.alert("Error", error.message);
+    } finally {
+      setIsCheckingPermissions(false);
+    }
+  };
+
+  // Function to validate database schema
+  const handleValidateDatabase = async () => {
+    try {
+      setIsCheckingPermissions(true);
+      const validation = await validateDatabaseSchema();
+      
+      if (validation.valid) {
+        Alert.alert("Database Status", "✅ All database schemas are properly configured!");
+      } else {
+        Alert.alert(
+          "Database Issues Found", 
+          `❌ Issues found:\n\n${validation.issues.join('\n\n')}\n\nCheck console for detailed instructions.`,
+          [{ text: "OK" }]
+        );
+      }
+    } catch (error) {
+      Alert.alert("Error", `Database validation failed: ${error.message}`);
+    } finally {
+      setIsCheckingPermissions(false);
+    }
+  };
+
+  // Function to test Appwrite connection
+  const handleTestConnection = async () => {
+    try {
+      setUploading(true);
+      const result = await testAppwriteConnection();
+      
+      if (result.success) {
+        Alert.alert("Connection Test", "✅ All Appwrite services are working correctly!");
+      } else {
+        Alert.alert(
+          "Connection Issues", 
+          `❌ Connection problems:\n\n${result.error}\n\nCheck console for details.`,
+          [{ text: "OK" }]
+        );
+      }
+    } catch (error) {
+      Alert.alert("Error", `Connection test failed: ${error.message}`);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const openPicker = async (selectType) => {
     const result = await DocumentPicker.getDocumentAsync({
@@ -119,24 +203,45 @@ const Create = () => {
         adminId: user.$id,
       };
 
+      console.log("Creating event with data:", eventData);
       const newEvent = await createEvent(eventData);
       
       // Send local notification
-      await sendLocalEventNotification(newEvent);
+      try {
+        await sendLocalEventNotification(newEvent);
+        console.log("Local notification sent successfully");
+      } catch (localError) {
+        console.log("Local notification failed:", localError);
+      }
       
-      Alert.alert('Success', 'Event created and notifications sent to all users!');
+      Alert.alert(
+        'Success', 
+        `Event "${newEvent.name}" created successfully!\n\nNotifications are being sent to all users in the background.`,
+        [
+          {
+            text: 'View Events',
+            onPress: () => router.push('/home')
+          },
+          {
+            text: 'Create Another',
+            onPress: () => {
+              // Reset form for another event
+              setEventForm({
+                name: "",
+                description: "",
+                date: new Date(),
+                venue: "",
+              });
+            }
+          }
+        ]
+      );
       
-      // Reset form
-      setEventForm({
-        name: "",
-        description: "",
-        date: new Date(),
-        venue: "",
-      });
+      // Don't automatically redirect - let user choose
       
-      router.push('/home');
     } catch (error) {
-      Alert.alert('Error', error.message);
+      console.log("Event creation error:", error);
+      Alert.alert('Error', `Failed to create event: ${error.message}`);
     } finally {
       setEventForm({
         name: "",
@@ -425,40 +530,98 @@ const Create = () => {
   return (
     <SafeAreaView className="bg-primary h-full">
       <ScrollView className="px-4 my-6">
-        {/* Tab Selector */}
-        <View className="flex-row bg-black-100 rounded-lg p-1 mb-6">
-          <TouchableOpacity
-            className={`flex-1 py-3 rounded-lg ${
-              activeTab === "video" ? "bg-secondary" : "bg-transparent"
-            }`}
-            onPress={() => setActiveTab("video")}
-          >
-            <Text className={`text-center font-psemibold ${
-              activeTab === "video" ? "text-primary" : "text-gray-100"
-            }`}>
-              Upload Video
-            </Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            className={`flex-1 py-3 rounded-lg ${
-              activeTab === "event" ? "bg-secondary" : "bg-transparent"
-            }`}
-            onPress={() => setActiveTab("event")}
-          >
-            <Text className={`text-center font-psemibold ${
-              activeTab === "event" ? "text-primary" : "text-gray-100"
-            }`}>
-              Create Event
-            </Text>
-          </TouchableOpacity>
-        </View>
+        {/* Loading state while checking permissions */}
+        {isCheckingPermissions ? (
+          <View className="flex-1 justify-center items-center py-20">
+            <Text className="text-white text-lg">Checking permissions...</Text>
+          </View>
+        ) : (
+          <>
+            {/* Tab Selector */}
+            <View className="flex-row bg-black-100 rounded-lg p-1 mb-6">
+              <TouchableOpacity
+                className={`${canCreateEvents ? 'flex-1' : 'flex-1'} py-3 rounded-lg ${
+                  activeTab === "video" ? "bg-secondary" : "bg-transparent"
+                }`}
+                onPress={() => setActiveTab("video")}
+              >
+                <Text className={`text-center font-psemibold ${
+                  activeTab === "video" ? "text-primary" : "text-gray-100"
+                }`}>
+                  Upload Video
+                </Text>
+              </TouchableOpacity>
+              
+              {/* Only show event tab if user has admin permissions */}
+              {canCreateEvents && (
+                <TouchableOpacity
+                  className={`flex-1 py-3 rounded-lg ${
+                    activeTab === "event" ? "bg-secondary" : "bg-transparent"
+                  }`}
+                  onPress={() => setActiveTab("event")}
+                >
+                  <Text className={`text-center font-psemibold ${
+                    activeTab === "event" ? "text-primary" : "text-gray-100"
+                  }`}>
+                    Create Event
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
 
-        <Text className="text-2xl text-white font-psemibold mb-6">
-          {activeTab === "video" ? "Upload Video" : "Create New Event"}
-        </Text>
+            {/* Show admin notice if event tab is not available */}
+            {!canCreateEvents && activeTab === "event" && setActiveTab("video")}
+            
+            {!canCreateEvents && (
+              <View className="bg-red-500/20 border border-red-500 rounded-lg p-4 mb-6">
+                <Text className="text-red-400 text-center font-pmedium mb-4">
+                  ⚠️ Event creation is restricted to administrators only
+                </Text>
+                
+                {/* Development buttons - remove in production */}
+                <View className="space-y-3">
+                  <CustomButton
+                    title="🔧 Promote to Admin (Testing)"
+                    handlePress={handlePromoteToAdmin}
+                    containerStyles="bg-yellow-600 min-h-[50px]"
+                    textStyles="text-black font-psemibold"
+                    isLoading={isCheckingPermissions}
+                  />
+                  
+                  <CustomButton
+                    title="🔍 Check Database Schema"
+                    handlePress={handleValidateDatabase}
+                    containerStyles="bg-blue-600 min-h-[50px]"
+                    textStyles="text-white font-psemibold"
+                    isLoading={isCheckingPermissions}
+                  />
+                </View>
+              </View>
+            )}
 
-        {activeTab === "video" ? renderVideoForm() : renderEventForm()}
+            <Text className="text-2xl text-white font-psemibold mb-6">
+              {activeTab === "video" ? "Upload Video" : "Create New Event"}
+            </Text>
+
+            {/* Debug Section for Video Upload Issues */}
+            {activeTab === "video" && (
+              <View className="bg-blue-500/20 border border-blue-500 rounded-lg p-4 mb-6">
+                <Text className="text-blue-400 text-center font-pmedium mb-4">
+                  🛠️ Having upload issues? Test connection first
+                </Text>
+                <CustomButton
+                  title="🔗 Test Appwrite Connection"
+                  handlePress={handleTestConnection}
+                  containerStyles="bg-green-600 min-h-[50px]"
+                  textStyles="text-white font-psemibold"
+                  isLoading={uploading}
+                />
+              </View>
+            )}
+
+            {activeTab === "video" ? renderVideoForm() : (canCreateEvents ? renderEventForm() : renderVideoForm())}
+          </>
+        )}
       </ScrollView>
     </SafeAreaView>
   );

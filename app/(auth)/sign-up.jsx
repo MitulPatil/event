@@ -21,16 +21,22 @@ const SignUp = () => {
   const submit = async () => {
     if (form.username === "" || form.email === "" || form.password === "") {
       Alert.alert("Error", "Please fill in all fields");
+      return;
     }
 
     setSubmitting(true);
     try {
+      console.log("Attempting to create user with:", form.email, form.username);
       const result = await createUser(form.email, form.password, form.username);
+      console.log("User created successfully:", result);
+      
       setUser(result);
       setIsLogged(true);
 
+      Alert.alert("Success", "Account created successfully!");
       router.replace("/home");
     } catch (error) {
+      console.log("Sign-up error:", error);
       Alert.alert("Error", error.message);
     } finally {
       setSubmitting(false);

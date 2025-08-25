@@ -5,7 +5,7 @@ import { View, Text, ScrollView, Dimensions, Alert, Image } from "react-native";
 
 import { images } from "../../constants";
 import { CustomButton, FormField } from "../../components";
-import { getCurrentUser, signIn } from "../../lib/appwrite";
+import { getCurrentUser, signIn, clearAllSessions } from "../../lib/appwrite";
 import { useGlobalContext } from "../../context/GlobalProvider";
 
 const SignIn = () => {
@@ -19,19 +19,33 @@ const SignIn = () => {
   const submit = async () => {
     if (form.email === "" || form.password === "") {
       Alert.alert("Error", "Please fill in all fields");
+      return;
     }
 
     setSubmitting(true);
 
     try {
+      console.log("Attempting to sign in with:", form.email);
+      
+      // Clear any conflicting sessions first
+      await clearAllSessions();
+      
       await signIn(form.email, form.password);
+      
+      console.log("Signed in successfully, getting current user...");
       const result = await getCurrentUser();
-      setUser(result);
-      setIsLogged(true);
-
-      Alert.alert("Success", "User signed in successfully");
-      router.replace("/home");
+      console.log("Current user result:", result);
+      
+      if (result) {
+        setUser(result);
+        setIsLogged(true);
+        Alert.alert("Success", "User signed in successfully");
+        router.replace("/home");
+      } else {
+        Alert.alert("Error", "Unable to get user data. Please try again.");
+      }
     } catch (error) {
+      console.log("Sign-in error:", error);
       Alert.alert("Error", error.message);
     } finally {
       setSubmitting(false);
