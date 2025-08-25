@@ -122,7 +122,16 @@ const Create = () => {
       // Send local notification
       await sendLocalEventNotification(newEvent);
       
-      Alert.alert('Success', 'Event created and notifications sent!');
+      Alert.alert('Success', 'Event created and notifications sent to all users!');
+      
+      // Reset form
+      setEventForm({
+        name: "",
+        description: "",
+        date: new Date(),
+        venue: "",
+      });
+      
       router.push('/home');
     } catch (error) {
       Alert.alert('Error', error.message);

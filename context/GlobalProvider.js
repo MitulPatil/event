@@ -3,6 +3,7 @@ import * as Notifications from 'expo-notifications';
 
 import { getCurrentUser } from "../lib/appwrite";
 import { registerForPushNotificationsAsync } from "../lib/notificationService";
+import { setupVerificationLinkHandler } from "../lib/handleVerificationLink";
 
 const GlobalContext = createContext();
 export const useGlobalContext = () => useContext(GlobalContext);
@@ -14,6 +15,8 @@ const GlobalProvider = ({ children }) => {
   const [expoPushToken, setExpoPushToken] = useState('');
 
   useEffect(() => {
+    // Setup Appwrite email verification deep link handler
+    setupVerificationLinkHandler();
     getCurrentUser()
       .then((res) => {
         if (res) {

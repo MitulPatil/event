@@ -1,11 +1,45 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { icons } from '../constants';
+import { getEventById } from '../lib/appwrite';
 
 const NotificationCard = ({ notification, onPress, onMarkAsRead }) => {
+  const [eventDetails, setEventDetails] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (notification.eventId && notification.type === 'event_created') {
+      loadEventDetails();
+    }
+  }, [notification.eventId]);
+
+  const loadEventDetails = async () => {
+    try {
+      setLoading(true);
+      const event = await getEventById(notification.eventId);
+      setEventDetails(event);
+    } catch (error) {
+      console.log('Error loading event details:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const formatEventDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      weekday: 'short',
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -28,22 +62,47 @@ const NotificationCard = ({ notification, onPress, onMarkAsRead }) => {
           </Text>
           
           <Text className="text-gray-300 font-pregular text-sm mb-2">
-            {notification.message}
+            {notification.description}
           </Text>
 
-          {notification.eventName && (
-            <View className="bg-secondary-100 rounded-lg p-3 mb-2">
-              <Text className="text-white font-psemibold text-sm mb-1">
-                📅 {notification.eventName}
+          {eventDetails && (
+            <View className="bg-secondary-100 rounded-lg p-3 mb-2 border-l-4 border-orange-500">
+              <Text className="text-orange-400 font-psemibold text-sm mb-2">
+                🎉 EVENT DETAILS
               </Text>
-              <Text className="text-gray-200 font-pregular text-xs mb-1">
-                📝 {notification.eventDescription}
+              <Text className="text-white font-psemibold text-base mb-2">
+                📅 {eventDetails.name}
               </Text>
-              <Text className="text-gray-200 font-pregular text-xs mb-1">
-                🗓️ {formatDate(notification.eventDate)}
+              <Text className="text-gray-200 font-pregular text-sm mb-2">
+                📝 {eventDetails.description}
               </Text>
-              <Text className="text-gray-200 font-pregular text-xs">
+              <Text className="text-gray-200 font-pregular text-sm mb-1">
+                🗓️ {formatEventDate(eventDetails.date)}
+              </Text>
+              <Text className="text-gray-200 font-pregular text-sm">
+                📍 {eventDetails.venue}
+              </Text>
+            </View>
+          )}
+
+          {!eventDetails && notification.eventVenue && (
+            <View className="bg-secondary-100 rounded-lg p-3 mb-2 border-l-4 border-orange-500">
+              <Text className="text-orange-400 font-psemibold text-sm mb-2">
+                🎉 EVENT DETAILS
+              </Text>
+              <Text className="text-gray-200 font-pregular text-sm mb-1">
+                �️ {formatEventDate(notification.date)}
+              </Text>
+              <Text className="text-gray-200 font-pregular text-sm">
                 📍 {notification.eventVenue}
+              </Text>
+            </View>
+          )}
+
+          {loading && (
+            <View className="bg-gray-700 rounded-lg p-3 mb-2">
+              <Text className="text-gray-400 font-pregular text-sm">
+                Loading event details...
               </Text>
             </View>
           )}

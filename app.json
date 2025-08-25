@@ -28,7 +28,7 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-router", 
+      "expo-router",
       "expo-font",
       [
         "expo-notifications",
@@ -39,6 +39,11 @@
         }
       ]
     ],
+    "updates": {
+      "enabled": false,
+      "checkAutomatically": "ON_ERROR_RECOVERY",
+      "fallbackToCacheTimeout": 0
+    },
     "extra": {
       "eas": {
         "projectId": "your-project-id-here"
