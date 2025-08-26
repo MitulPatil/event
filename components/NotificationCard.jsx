@@ -149,7 +149,7 @@ const NotificationCard = ({ notification, onPress, onMarkAsRead, onDelete }) => 
             disabled={deleting}
             className="mr-2"
           >
-            <View className="bg-red-600 rounded-full p-2">
+            <View className="bg-red-600 rounded-md p-2">
               {deleting ? (
                 <ActivityIndicator size="small" color="white" />
               ) : (

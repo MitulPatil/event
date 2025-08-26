@@ -30,16 +30,21 @@ const Home = () => {
       <FlatList
         data={posts}
         keyExtractor={(item) => item.$id}
-        renderItem={({ item }) => (
-          <VideoCard
-            title={item.title}
-            thumbnail={item.thumbnail}
-            video={item.video}
-            creator={item.creator.username}
-            avatar={item.creator.avatar}
-            prompt={item.prompt}
-          />
-        )}
+        renderItem={({ item }) => {
+          // Debug logging to see the actual data structure
+          console.log("Post item data:", JSON.stringify(item, null, 2));
+          
+          return (
+            <VideoCard
+              title={item.title}
+              thumbnail={item.thumbnail}
+              video={item.video}
+              creator={item.creator?.username || "Unknown"}
+              avatar={item.creator?.avatar || null}
+              prompt={item.prompt}
+            />
+          );
+        }}
         ListHeaderComponent={() => (
           <View className="flex my-6 px-4 space-y-6">
             <View className="flex justify-between items-start flex-row mb-6">

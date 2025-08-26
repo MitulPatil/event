@@ -8,16 +8,28 @@ const VideoCard = ({ title, creator, avatar, thumbnail, video, prompt }) => {
   const [play, setPlay] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
 
+  // Debug logging to see what data we're receiving
+  console.log("VideoCard props:", { title, creator, avatar, thumbnail: !!thumbnail, video: !!video, prompt: !!prompt });
+
   return (
     <View className="flex flex-col items-center px-4 mb-14">
       <View className="flex flex-row gap-3 items-start">
         <View className="flex justify-center items-center flex-row flex-1">
           <View className="w-[46px] h-[46px] rounded-lg border border-secondary flex justify-center items-center p-0.5">
-            <Image
-              source={{ uri: avatar }}
-              className="w-full h-full rounded-lg"
-              resizeMode="cover"
-            />
+            {avatar ? (
+              <Image
+                source={{ uri: avatar }}
+                className="w-full h-full rounded-lg"
+                resizeMode="cover"
+                onError={() => console.log("Avatar failed to load:", avatar)}
+              />
+            ) : (
+              <View className="w-full h-full rounded-lg bg-secondary-100 flex justify-center items-center">
+                <Text className="text-primary font-psemibold text-lg">
+                  {creator ? creator.charAt(0).toUpperCase() : "?"}
+                </Text>
+              </View>
+            )}
           </View>
 
           <View className="flex justify-center flex-1 ml-3 gap-y-1">
