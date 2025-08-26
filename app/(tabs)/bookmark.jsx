@@ -53,6 +53,16 @@ const Notifications = () => {
     // You can add navigation to event details here if needed
   };
 
+  const handleDelete = async (notificationId) => {
+    try {
+      // Remove the notification from the local state immediately for better UX
+      await refetch();
+      await loadUnreadCount();
+    } catch (error) {
+      Alert.alert('Error', 'Failed to delete notification');
+    }
+  };
+
   return (
     <SafeAreaView className="bg-primary h-full">
       <View className="px-4 my-6">
@@ -77,6 +87,7 @@ const Notifications = () => {
               notification={item}
               onPress={() => handleNotificationPress(item)}
               onMarkAsRead={handleMarkAsRead}
+              onDelete={handleDelete}
             />
           )}
           ListEmptyComponent={() => (

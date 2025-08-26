@@ -32,6 +32,7 @@ const Profile = () => {
             video={item.video}
             creator={item.creator.username}
             avatar={item.creator.avatar}
+            prompt={item.prompt}
           />
         )}
         ListEmptyComponent={() => (

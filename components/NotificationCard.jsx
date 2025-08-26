@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Image } from 'react-native';
+import { View, Text, TouchableOpacity, Image, Alert, ActivityIndicator } from 'react-native';
 import { icons } from '../constants';
-import { getEventById } from '../lib/appwrite';
+import { getEventById, deleteNotification } from '../lib/appwrite';
 
-const NotificationCard = ({ notification, onPress, onMarkAsRead }) => {
+const NotificationCard = ({ notification, onPress, onMarkAsRead, onDelete }) => {
   const [eventDetails, setEventDetails] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (notification.eventId && notification.type === 'event_created') {
@@ -46,6 +47,36 @@ const NotificationCard = ({ notification, onPress, onMarkAsRead }) => {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const handleDelete = () => {
+    Alert.alert(
+      "Delete Notification",
+      "Are you sure you want to delete this notification?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              setDeleting(true);
+              await deleteNotification(notification.$id);
+              if (onDelete) {
+                onDelete(notification.$id);
+              }
+            } catch (error) {
+              Alert.alert("Error", `Failed to delete notification: ${error.message}`);
+            } finally {
+              setDeleting(false);
+            }
+          }
+        }
+      ]
+    );
   };
 
   return (
@@ -113,6 +144,20 @@ const NotificationCard = ({ notification, onPress, onMarkAsRead }) => {
         </View>
 
         <View className="flex-row items-center">
+          <TouchableOpacity 
+            onPress={handleDelete}
+            disabled={deleting}
+            className="mr-2"
+          >
+            <View className="bg-red-600 rounded-full p-2">
+              {deleting ? (
+                <ActivityIndicator size="small" color="white" />
+              ) : (
+                <Text className="text-white text-xs font-bold">✕</Text>
+              )}
+            </View>
+          </TouchableOpacity>
+
           {!notification.isRead && (
             <TouchableOpacity 
               onPress={() => onMarkAsRead(notification.$id)}

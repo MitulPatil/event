@@ -4,8 +4,9 @@ import { View, Text, TouchableOpacity, Image } from "react-native";
 
 import { icons } from "../constants";
 
-const VideoCard = ({ title, creator, avatar, thumbnail, video }) => {
+const VideoCard = ({ title, creator, avatar, thumbnail, video, prompt }) => {
   const [play, setPlay] = useState(false);
+  const [showFullDescription, setShowFullDescription] = useState(false);
 
   return (
     <View className="flex flex-col items-center px-4 mb-14">
@@ -71,6 +72,28 @@ const VideoCard = ({ title, creator, avatar, thumbnail, video }) => {
             resizeMode="contain"
           />
         </TouchableOpacity>
+      )}
+      
+      {/* Video Description Section */}
+      {prompt && (
+        <View className="w-full mt-3 px-2">
+          <TouchableOpacity onPress={() => setShowFullDescription(!showFullDescription)}>
+            <Text className="text-white font-pmedium text-sm mb-1">
+              Description
+            </Text>
+            <Text 
+              className="text-gray-300 font-pregular text-sm leading-5"
+              numberOfLines={showFullDescription ? undefined : 3}
+            >
+              {prompt}
+            </Text>
+            {prompt.length > 150 && (
+              <Text className="text-secondary text-xs mt-1 font-pmedium">
+                {showFullDescription ? "Show less" : "Show more"}
+              </Text>
+            )}
+          </TouchableOpacity>
+        </View>
       )}
     </View>
   );
