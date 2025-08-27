@@ -110,15 +110,42 @@ event_pulse/
    ```
 
 3. **Set up environment variables**
-   Create a `.env` file in the root directory and add your Appwrite credentials:
+   Copy the example environment file and configure your Appwrite credentials:
+   ```bash
+   # Copy the example file
+   cp .env.example .env
+   ```
+   
+   Edit the `.env` file and add your Appwrite credentials:
    ```env
-   EXPO_PUBLIC_APPWRITE_ENDPOINT=your_appwrite_endpoint
+   # Appwrite Configuration
+   EXPO_PUBLIC_APPWRITE_ENDPOINT=https://fra.cloud.appwrite.io/v1
+   EXPO_PUBLIC_APPWRITE_PLATFORM=com.projects.eventpulse
    EXPO_PUBLIC_APPWRITE_PROJECT_ID=your_project_id
+   EXPO_PUBLIC_APPWRITE_STORAGE_ID=your_storage_bucket_id
    EXPO_PUBLIC_APPWRITE_DATABASE_ID=your_database_id
    EXPO_PUBLIC_APPWRITE_USER_COLLECTION_ID=your_user_collection_id
    EXPO_PUBLIC_APPWRITE_VIDEO_COLLECTION_ID=your_video_collection_id
-   EXPO_PUBLIC_APPWRITE_STORAGE_ID=your_storage_bucket_id
+   EXPO_PUBLIC_APPWRITE_EVENTS_COLLECTION_ID=your_events_collection_id
+   EXPO_PUBLIC_APPWRITE_NOTIFICATIONS_COLLECTION_ID=your_notifications_collection_id
+   
+   # App Configuration
+   EXPO_PUBLIC_APP_NAME=Event Pulse
+   EXPO_PUBLIC_APP_VERSION=1.0.0
+   EXPO_PUBLIC_DEBUG_MODE=true
    ```
+
+   **🔗 How to get your Appwrite credentials:**
+   1. Go to your [Appwrite Console](https://cloud.appwrite.io/)
+   2. Select your project
+   3. Copy the **Project ID** from Settings → General
+   4. Go to Database → Your Database → Copy the **Database ID**
+   5. Go to Storage → Your Bucket → Copy the **Bucket ID**
+   6. Go to Database → Collections and copy each Collection ID:
+      - Users Collection ID
+      - Videos Collection ID  
+      - Events Collection ID
+      - Notifications Collection ID
 
 4. **Start the development server**
    ```bash
@@ -165,6 +192,22 @@ UI Update ← State Update ← Response ← API Response
 ```
 
 ## 🔧 Configuration
+
+### **Environment Variables**
+All sensitive configuration is managed through environment variables:
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `EXPO_PUBLIC_APPWRITE_ENDPOINT` | Appwrite server endpoint | ✅ |
+| `EXPO_PUBLIC_APPWRITE_PROJECT_ID` | Your Appwrite project ID | ✅ |
+| `EXPO_PUBLIC_APPWRITE_DATABASE_ID` | Database ID for your collections | ✅ |
+| `EXPO_PUBLIC_APPWRITE_STORAGE_ID` | Storage bucket ID for files | ✅ |
+| `EXPO_PUBLIC_APPWRITE_USER_COLLECTION_ID` | Users collection ID | ✅ |
+| `EXPO_PUBLIC_APPWRITE_VIDEO_COLLECTION_ID` | Videos collection ID | ✅ |
+| `EXPO_PUBLIC_APPWRITE_EVENTS_COLLECTION_ID` | Events collection ID | ✅ |
+| `EXPO_PUBLIC_APPWRITE_NOTIFICATIONS_COLLECTION_ID` | Notifications collection ID | ✅ |
+| `EXPO_PUBLIC_APP_NAME` | Application display name | ❌ |
+| `EXPO_PUBLIC_DEBUG_MODE` | Enable debug logging | ❌ |
 
 ### **Babel Configuration**
 The project uses Babel for code transformation:
