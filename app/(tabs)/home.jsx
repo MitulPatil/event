@@ -6,10 +6,12 @@ import { images } from "../../constants";
 import useAppwrite from "../../lib/useAppwrite";
 import { getAllPosts, getLatestPosts } from "../../lib/appwrite";
 import { EmptyState, SearchInput, Trending, VideoCard } from "../../components";
+import { useGlobalContext } from "../../context/GlobalProvider";
 
 const Home = () => {
   const { data: posts, refetch } = useAppwrite(getAllPosts);
   const { data: latestPosts } = useAppwrite(getLatestPosts);
+  const { user } = useGlobalContext(); // Get current logged-in user
 
   const [refreshing, setRefreshing] = useState(false);
 
@@ -17,6 +19,23 @@ const Home = () => {
     setRefreshing(true);
     await refetch();
     setRefreshing(false);
+  };
+
+  // Debug: Log current user information
+  console.log("🏠 Home: Current user info:", {
+    hasUser: !!user,
+    username: user?.username,
+    email: user?.email,
+    avatar: user?.avatar,
+    userId: user?.$id
+  });
+
+  // Helper function to get user avatar or generate initials
+  const getUserAvatar = () => {
+    if (user?.avatar && typeof user.avatar === 'string' && user.avatar.trim() !== '') {
+      return user.avatar;
+    }
+    return null; // Return null to show initials instead
   };
 
   // one flatlist
@@ -31,16 +50,21 @@ const Home = () => {
         data={posts}
         keyExtractor={(item) => item.$id}
         renderItem={({ item }) => {
-          // Debug logging to see the actual data structure
-          console.log("Post item data:", JSON.stringify(item, null, 2));
+          // Use current logged-in user information instead of post creator
+          console.log("🏠 Home: Rendering post with current user info:", {
+            postId: item.$id,
+            title: item.title,
+            currentUser: user?.username,
+            currentUserAvatar: getUserAvatar()
+          });
           
           return (
             <VideoCard
               title={item.title}
               thumbnail={item.thumbnail}
               video={item.video}
-              creator={item.creator?.username || "Unknown"}
-              avatar={item.creator?.avatar || null}
+              creator={user?.username || "Guest User"}
+              avatar={getUserAvatar()}
               prompt={item.prompt}
             />
           );
@@ -49,9 +73,14 @@ const Home = () => {
           <View className="flex my-6 px-4 space-y-6">
             <View className="flex justify-between items-start flex-row mb-6">
               <View className="flex justify-between flex-row w-full items-center">
-                <Text className="font-pmedium text-lg text-gray-100">
-                  Welcome Back
-                </Text>
+                <View>
+                  <Text className="font-pmedium text-lg text-gray-100">
+                    Welcome Back
+                  </Text>
+                  <Text className="text-2xl font-psemibold text-white">
+                    {user?.username || "Guest"}
+                  </Text>
+                </View>
                 <Image
                   source={images.logoSmall}
                   className="w-12 h-9"

@@ -7,26 +7,50 @@ import { icons } from "../constants";
 const VideoCard = ({ title, creator, avatar, thumbnail, video, prompt }) => {
   const [play, setPlay] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
 
   // Debug logging to see what data we're receiving
-  console.log("VideoCard props:", { title, creator, avatar, thumbnail: !!thumbnail, video: !!video, prompt: !!prompt });
+  console.log("🎬 VideoCard props:", { 
+    title, 
+    creator, 
+    avatar: !!avatar, 
+    avatarUrl: avatar,
+    thumbnail: !!thumbnail, 
+    video: !!video, 
+    prompt: !!prompt 
+  });
+
+  // Get the first letter for avatar fallback
+  const getAvatarLetter = () => {
+    if (creator && typeof creator === 'string') {
+      return creator.charAt(0).toUpperCase();
+    }
+    return "U"; // Default to "U" for User
+  };
 
   return (
     <View className="flex flex-col items-center px-4 mb-14">
       <View className="flex flex-row gap-3 items-start">
         <View className="flex justify-center items-center flex-row flex-1">
           <View className="w-[46px] h-[46px] rounded-lg border border-secondary flex justify-center items-center p-0.5">
-            {avatar ? (
+            {avatar && !avatarError ? (
               <Image
                 source={{ uri: avatar }}
                 className="w-full h-full rounded-lg"
                 resizeMode="cover"
-                onError={() => console.log("Avatar failed to load:", avatar)}
+                onError={(error) => {
+                  console.log("Avatar failed to load:", avatar, error);
+                  setAvatarError(true);
+                }}
+                onLoad={() => {
+                  console.log("Avatar loaded successfully:", avatar);
+                  setAvatarError(false);
+                }}
               />
             ) : (
               <View className="w-full h-full rounded-lg bg-secondary-100 flex justify-center items-center">
                 <Text className="text-primary font-psemibold text-lg">
-                  {creator ? creator.charAt(0).toUpperCase() : "?"}
+                  {getAvatarLetter()}
                 </Text>
               </View>
             )}
@@ -43,7 +67,7 @@ const VideoCard = ({ title, creator, avatar, thumbnail, video, prompt }) => {
               className="text-xs text-gray-100 font-pregular"
               numberOfLines={1}
             >
-              {creator}
+              {creator || "Unknown User"}
             </Text>
           </View>
         </View>

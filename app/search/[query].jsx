@@ -6,9 +6,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import useAppwrite from "../../lib/useAppwrite";
 import { searchPosts, searchEvents } from "../../lib/appwrite";
 import { EmptyState, SearchInput, VideoCard } from "../../components";
+import { useGlobalContext } from "../../context/GlobalProvider";
 
 const Search = () => {
   const { query } = useLocalSearchParams();
+  const { user } = useGlobalContext(); // Get current logged-in user
   const [activeTab, setActiveTab] = useState("videos"); // "videos" or "events"
   const { data: posts, refetch: refetchPosts } = useAppwrite(() => searchPosts(query));
   const { data: events, refetch: refetchEvents } = useAppwrite(() => searchEvents(query));
@@ -18,16 +20,33 @@ const Search = () => {
     refetchEvents();
   }, [query]);
 
-  const renderVideoCard = ({ item }) => (
-    <VideoCard
-      title={item.title}
-      thumbnail={item.thumbnail}
-      video={item.video}
-      creator={item.creator?.username}
-      avatar={item.creator?.avatar}
-      prompt={item.prompt}
-    />
-  );
+  // Helper function to get user avatar or return null for initials
+  const getUserAvatar = () => {
+    if (user?.avatar && typeof user.avatar === 'string' && user.avatar.trim() !== '') {
+      return user.avatar;
+    }
+    return null; // Return null to show initials instead
+  };
+
+  const renderVideoCard = ({ item }) => {
+    console.log("🔍 Search: Rendering video card with current user info:", {
+      postId: item.$id,
+      title: item.title,
+      currentUser: user?.username,
+      currentUserAvatar: getUserAvatar()
+    });
+    
+    return (
+      <VideoCard
+        title={item.title}
+        thumbnail={item.thumbnail}
+        video={item.video}
+        creator={user?.username || "Guest User"}
+        avatar={getUserAvatar()}
+        prompt={item.prompt}
+      />
+    );
+  };
 
   const renderEventCard = ({ item }) => (
     <View className="p-4 mb-3 bg-black-100 rounded-lg mx-4">

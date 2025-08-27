@@ -15,7 +15,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { Platform } from 'react-native';
 
 import { icons } from "../../constants";
-import { createVideoPost, createEvent, checkUserPermissions, canUserCreateEvents, promoteCurrentUserToAdmin, validateDatabaseSchema, testAppwriteConnection } from "../../lib/appwrite";
+import { createVideoPost, createEvent, checkUserPermissions, canUserCreateEvents, promoteCurrentUserToAdmin, validateDatabaseSchema } from "../../lib/appwrite";
 import { sendLocalEventNotification } from "../../lib/notificationService";
 import { CustomButton, FormField } from "../../components";
 import { useGlobalContext } from "../../context/GlobalProvider";
@@ -103,28 +103,6 @@ const Create = () => {
       Alert.alert("Error", `Database validation failed: ${error.message}`);
     } finally {
       setIsCheckingPermissions(false);
-    }
-  };
-
-  // Function to test Appwrite connection
-  const handleTestConnection = async () => {
-    try {
-      setUploading(true);
-      const result = await testAppwriteConnection();
-      
-      if (result.success) {
-        Alert.alert("Connection Test", "✅ All Appwrite services are working correctly!");
-      } else {
-        Alert.alert(
-          "Connection Issues", 
-          `❌ Connection problems:\n\n${result.error}\n\nCheck console for details.`,
-          [{ text: "OK" }]
-        );
-      }
-    } catch (error) {
-      Alert.alert("Error", `Connection test failed: ${error.message}`);
-    } finally {
-      setUploading(false);
     }
   };
 
@@ -602,22 +580,6 @@ const Create = () => {
             <Text className="text-2xl text-white font-psemibold mb-6">
               {activeTab === "video" ? "Upload Video" : "Create New Event"}
             </Text>
-
-            {/* Debug Section for Video Upload Issues */}
-            {activeTab === "video" && (
-              <View className="bg-blue-500/20 border border-blue-500 rounded-lg p-4 mb-6">
-                <Text className="text-blue-400 text-center font-pmedium mb-4">
-                  🛠️ Having upload issues? Test connection first
-                </Text>
-                <CustomButton
-                  title="🔗 Test Appwrite Connection"
-                  handlePress={handleTestConnection}
-                  containerStyles="bg-green-600 min-h-[50px]"
-                  textStyles="text-white font-psemibold"
-                  isLoading={uploading}
-                />
-              </View>
-            )}
 
             {activeTab === "video" ? renderVideoForm() : (canCreateEvents ? renderEventForm() : renderVideoForm())}
           </>
