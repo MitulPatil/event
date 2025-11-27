@@ -11,8 +11,10 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "scheme": "EventPulse",
-    "assetBundlePatterns": ["**/*"],
+    "scheme": "eventpulse",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true
     },
@@ -37,7 +39,8 @@
           "color": "#ffffff",
           "defaultChannel": "default"
         }
-      ]
+      ],
+      "expo-asset"
     ],
     "updates": {
       "enabled": false,
@@ -45,8 +48,11 @@
       "fallbackToCacheTimeout": 0
     },
     "extra": {
+      "router": {
+        "origin": false
+      },
       "eas": {
-        "projectId": "your-project-id-here"
+        "projectId": "8be217bb-9fd7-48c9-ad8e-6207823014b5"
       }
     }
   }

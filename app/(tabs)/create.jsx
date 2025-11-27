@@ -1,8 +1,10 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { router } from "expo-router";
 import { ResizeMode, Video } from "expo-av";
 import * as DocumentPicker from "expo-document-picker";
 import { SafeAreaView } from "react-native-safe-area-context";
+import DateTimePicker from "@react-native-community/datetimepicker";
+
 import {
   View,
   Text,
@@ -10,12 +12,18 @@ import {
   Image,
   TouchableOpacity,
   ScrollView,
+  Platform,
 } from "react-native";
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { Platform } from 'react-native';
 
 import { icons } from "../../constants";
-import { createVideoPost, createEvent, checkUserPermissions, canUserCreateEvents, promoteCurrentUserToAdmin, validateDatabaseSchema } from "../../lib/appwrite";
+import {
+  createVideoPost,
+  createEvent,
+  checkUserPermissions,
+  canUserCreateEvents,
+  promoteCurrentUserToAdmin,
+  validateDatabaseSchema,
+} from "../../lib/appwrite";
 import { sendLocalEventNotification } from "../../lib/notificationService";
 import { CustomButton, FormField } from "../../components";
 import { useGlobalContext } from "../../context/GlobalProvider";
@@ -29,7 +37,7 @@ const Create = () => {
   const [pickerMode, setPickerMode] = useState("date"); // "date" or "time"
   const [canCreateEvents, setCanCreateEvents] = useState(false);
   const [isCheckingPermissions, setIsCheckingPermissions] = useState(true);
-  
+
   // Video form state
   const [videoForm, setVideoForm] = useState({
     title: "",
@@ -72,8 +80,11 @@ const Create = () => {
     try {
       setIsCheckingPermissions(true);
       await promoteCurrentUserToAdmin();
-      Alert.alert("Success", "You have been promoted to admin! Restart the app to see changes.");
-      
+      Alert.alert(
+        "Success",
+        "You have been promoted to admin! Restart the app to see changes.",
+      );
+
       // Refresh permissions
       const permissions = await canUserCreateEvents(user.$id);
       setCanCreateEvents(permissions.canCreate);
@@ -89,14 +100,19 @@ const Create = () => {
     try {
       setIsCheckingPermissions(true);
       const validation = await validateDatabaseSchema();
-      
+
       if (validation.valid) {
-        Alert.alert("Database Status", "✅ All database schemas are properly configured!");
+        Alert.alert(
+          "Database Status",
+          "✅ All database schemas are properly configured!",
+        );
       } else {
         Alert.alert(
-          "Database Issues Found", 
-          `❌ Issues found:\n\n${validation.issues.join('\n\n')}\n\nCheck console for detailed instructions.`,
-          [{ text: "OK" }]
+          "Database Issues Found",
+          `❌ Issues found:\n\n${validation.issues.join(
+            "\n\n",
+          )}\n\nCheck console for detailed instructions.`,
+          [{ text: "OK" }],
         );
       }
     } catch (error) {
@@ -110,8 +126,8 @@ const Create = () => {
     const result = await DocumentPicker.getDocumentAsync({
       type:
         selectType === "image"
-          ? ["image/png", "image/jpg","image/jpeg","image/heic"]
-          : ["video/mp4", "video/gif","video/mkv"],
+          ? ["image/png", "image/jpg", "image/jpeg", "image/heic"]
+          : ["video/mp4", "video/gif", "video/mkv"],
     });
 
     if (!result.canceled) {
@@ -137,9 +153,9 @@ const Create = () => {
 
   const submitVideo = async () => {
     if (
-      (videoForm.prompt === "") |
-      (videoForm.title === "") |
-      !videoForm.thumbnail |
+      (videoForm.prompt === "") ||
+      (videoForm.title === "") ||
+      !videoForm.thumbnail ||
       !videoForm.video
     ) {
       return Alert.alert("Please provide all fields");
@@ -169,7 +185,7 @@ const Create = () => {
 
   const submitEvent = async () => {
     if (!eventForm.name || !eventForm.description || !eventForm.venue) {
-      Alert.alert('Error', 'Please fill in all fields');
+      Alert.alert("Error", "Please fill in all fields");
       return;
     }
 
@@ -183,7 +199,7 @@ const Create = () => {
 
       console.log("Creating event with data:", eventData);
       const newEvent = await createEvent(eventData);
-      
+
       // Send local notification
       try {
         await sendLocalEventNotification(newEvent);
@@ -191,17 +207,17 @@ const Create = () => {
       } catch (localError) {
         console.log("Local notification failed:", localError);
       }
-      
+
       Alert.alert(
-        'Success', 
+        "Success",
         `Event "${newEvent.name}" created successfully!\n\nNotifications are being sent to all users in the background.`,
         [
           {
-            text: 'View Events',
-            onPress: () => router.push('/home')
+            text: "View Events",
+            onPress: () => router.push("/home"),
           },
           {
-            text: 'Create Another',
+            text: "Create Another",
             onPress: () => {
               // Reset form for another event
               setEventForm({
@@ -210,16 +226,15 @@ const Create = () => {
                 date: new Date(),
                 venue: "",
               });
-            }
-          }
-        ]
+            },
+          },
+        ],
       );
-      
+
       // Don't automatically redirect - let user choose
-      
     } catch (error) {
       console.log("Event creation error:", error);
-      Alert.alert('Error', `Failed to create event: ${error.message}`);
+      Alert.alert("Error", `Failed to create event: ${error.message}`);
     } finally {
       setEventForm({
         name: "",
@@ -232,7 +247,7 @@ const Create = () => {
   };
 
   const showDatePickerModal = () => {
-    if (Platform.OS === 'android') {
+    if (Platform.OS === "android") {
       setPickerMode("date");
       setShowDatePicker(true);
     } else {
@@ -241,16 +256,16 @@ const Create = () => {
   };
 
   const showTimePickerModal = () => {
-    if (Platform.OS === 'android') {
+    if (Platform.OS === "android") {
       setPickerMode("time");
       setShowTimePicker(true);
     }
   };
 
   const onDateChange = (event, selectedDate) => {
-    if (Platform.OS === 'ios') {
+    if (Platform.OS === "ios") {
       // iOS handles datetime in one picker
-      if (event?.type === 'dismissed') {
+      if (event?.type === "dismissed") {
         setShowDatePicker(false);
         return;
       }
@@ -260,11 +275,11 @@ const Create = () => {
     } else {
       // Android - handle date and time separately
       setShowDatePicker(false);
-      
-      if (event?.type === 'dismissed') {
+
+      if (event?.type === "dismissed") {
         return;
       }
-      
+
       if (selectedDate && pickerMode === "date") {
         const newDateTime = new Date(eventForm.date);
         newDateTime.setFullYear(selectedDate.getFullYear());
@@ -277,11 +292,11 @@ const Create = () => {
 
   const onTimeChange = (event, selectedTime) => {
     setShowTimePicker(false);
-    
-    if (event?.type === 'dismissed') {
+
+    if (event?.type === "dismissed") {
       return;
     }
-    
+
     if (selectedTime) {
       const newDateTime = new Date(eventForm.date);
       newDateTime.setHours(selectedTime.getHours());
@@ -398,11 +413,15 @@ const Create = () => {
         <Text className="text-base text-gray-100 font-pmedium mb-2">
           Event Date & Time
         </Text>
-        
-        {Platform.OS === 'ios' ? (
+
+        {Platform.OS === "ios" ? (
           // iOS - Single datetime picker
           <CustomButton
-            title={eventForm.date.toLocaleDateString() + ' ' + eventForm.date.toLocaleTimeString()}
+            title={
+              eventForm.date.toLocaleDateString() +
+              " " +
+              eventForm.date.toLocaleTimeString()
+            }
             handlePress={showDatePickerModal}
             containerStyles="bg-black-200 border border-black-200"
             textStyles="text-gray-100"
@@ -415,7 +434,10 @@ const Create = () => {
                 <Text className="text-sm text-gray-300 mb-1">Date</Text>
                 <CustomButton
                   title={eventForm.date.toLocaleDateString()}
-                  handlePress={showDatePickerModal}
+                  handlePress={() => {
+                    setPickerMode("date");
+                    setShowDatePicker(true);
+                  }}
                   containerStyles="bg-black-200 border border-black-200"
                   textStyles="text-gray-100 text-sm"
                 />
@@ -423,8 +445,14 @@ const Create = () => {
               <View className="flex-1">
                 <Text className="text-sm text-gray-300 mb-1">Time</Text>
                 <CustomButton
-                  title={eventForm.date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                  handlePress={showTimePickerModal}
+                  title={eventForm.date.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                  handlePress={() => {
+                    setPickerMode("time");
+                    setShowTimePicker(true);
+                  }}
                   containerStyles="bg-black-200 border border-black-200"
                   textStyles="text-gray-100 text-sm"
                 />
@@ -432,7 +460,11 @@ const Create = () => {
             </View>
             <View className="bg-gray-700 p-3 rounded-lg">
               <Text className="text-gray-300 text-xs">
-                📅 {eventForm.date.toLocaleDateString()} at {eventForm.date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                📅 {eventForm.date.toLocaleDateString()} at{" "}
+                {eventForm.date.toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
               </Text>
             </View>
           </View>
@@ -442,15 +474,14 @@ const Create = () => {
       {/* Date Picker */}
       {showDatePicker && (
         <View className="mt-4">
-          {Platform.OS === 'ios' ? (
+          {Platform.OS === "ios" ? (
             <>
               <DateTimePicker
-                testID="dateTimePicker"
                 value={eventForm.date}
-                mode="datetime"
+                mode={pickerMode}
                 is24Hour={true}
-                display="spinner"
-                onChange={onDateChange}
+                display="default"
+                onChange={pickerMode === "date" ? onDateChange : onTimeChange}
                 minimumDate={new Date()}
               />
               <CustomButton
@@ -475,7 +506,7 @@ const Create = () => {
       )}
 
       {/* Time Picker - Android only */}
-      {showTimePicker && Platform.OS === 'android' && (
+      {showTimePicker && Platform.OS === "android" && (
         <View className="mt-4">
           <DateTimePicker
             testID="timePicker"
@@ -518,18 +549,20 @@ const Create = () => {
             {/* Tab Selector */}
             <View className="flex-row bg-black-100 rounded-lg p-1 mb-6">
               <TouchableOpacity
-                className={`${canCreateEvents ? 'flex-1' : 'flex-1'} py-3 rounded-lg ${
+                className={`${canCreateEvents ? "flex-1" : "flex-1"} py-3 rounded-lg ${
                   activeTab === "video" ? "bg-secondary" : "bg-transparent"
                 }`}
                 onPress={() => setActiveTab("video")}
               >
-                <Text className={`text-center font-psemibold ${
-                  activeTab === "video" ? "text-primary" : "text-gray-100"
-                }`}>
+                <Text
+                  className={`text-center font-psemibold ${
+                    activeTab === "video" ? "text-primary" : "text-gray-100"
+                  }`}
+                >
                   Upload Video
                 </Text>
               </TouchableOpacity>
-              
+
               {/* Only show event tab if user has admin permissions */}
               {canCreateEvents && (
                 <TouchableOpacity
@@ -538,24 +571,23 @@ const Create = () => {
                   }`}
                   onPress={() => setActiveTab("event")}
                 >
-                  <Text className={`text-center font-psemibold ${
-                    activeTab === "event" ? "text-primary" : "text-gray-100"
-                  }`}>
+                  <Text
+                    className={`text-center font-psemibold ${
+                      activeTab === "event" ? "text-primary" : "text-gray-100"
+                    }`}
+                  >
                     Create Event
                   </Text>
                 </TouchableOpacity>
               )}
             </View>
 
-            {/* Show admin notice if event tab is not available */}
-            {!canCreateEvents && activeTab === "event" && setActiveTab("video")}
-            
             {!canCreateEvents && (
               <View className="bg-red-500/20 border border-red-500 rounded-lg p-4 mb-6">
                 <Text className="text-red-400 text-center font-pmedium mb-4">
                   ⚠️ Event creation is restricted to administrators only
                 </Text>
-                
+
                 {/* Development buttons - remove in production */}
                 <View className="space-y-3">
                   <CustomButton
@@ -565,7 +597,7 @@ const Create = () => {
                     textStyles="text-black font-psemibold"
                     isLoading={isCheckingPermissions}
                   />
-                  
+
                   <CustomButton
                     title="🔍 Check Database Schema"
                     handlePress={handleValidateDatabase}
@@ -581,7 +613,11 @@ const Create = () => {
               {activeTab === "video" ? "Upload Video" : "Create New Event"}
             </Text>
 
-            {activeTab === "video" ? renderVideoForm() : (canCreateEvents ? renderEventForm() : renderVideoForm())}
+            {activeTab === "video"
+              ? renderVideoForm()
+              : canCreateEvents
+                ? renderEventForm()
+                : renderVideoForm()}
           </>
         )}
       </ScrollView>
