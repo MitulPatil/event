@@ -23,8 +23,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.projects.eventpulse",
-      "newArchEnabled": true
+      "package": "com.projects.eventpulse"
     },
     "web": {
       "favicon": "./assets/favicon.png"
