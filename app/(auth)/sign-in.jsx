@@ -25,27 +25,17 @@ const SignIn = () => {
     setSubmitting(true);
 
     try {
-      console.log("Attempting to sign in with:", form.email);
-      
-      // Clear any conflicting sessions first
-      await clearAllSessions();
-      
       await signIn(form.email, form.password);
-      
-      console.log("Signed in successfully, getting current user...");
       const result = await getCurrentUser();
-      console.log("Current user result:", result);
-      
+
       if (result) {
         setUser(result);
         setIsLogged(true);
-        Alert.alert("Success", "User signed in successfully");
         router.replace("/home");
       } else {
         Alert.alert("Error", "Unable to get user data. Please try again.");
       }
     } catch (error) {
-      console.log("Sign-in error:", error);
       Alert.alert("Error", error.message);
     } finally {
       setSubmitting(false);
