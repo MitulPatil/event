@@ -10,17 +10,6 @@ const VideoCard = ({ title, creator, avatar, thumbnail, video, prompt }) => {
   const [avatarError, setAvatarError] = useState(false);
   const videoRef = useRef(null);
 
-  // Debug logging to see what data we're receiving
-  console.log("🎬 VideoCard props:", { 
-    title, 
-    creator, 
-    avatar: !!avatar, 
-    avatarUrl: avatar,
-    thumbnail: !!thumbnail, 
-    video: !!video, 
-    prompt: !!prompt 
-  });
-
   // Get the first letter for avatar fallback
   const getAvatarLetter = () => {
     if (creator && typeof creator === 'string') {
@@ -39,14 +28,7 @@ const VideoCard = ({ title, creator, avatar, thumbnail, video, prompt }) => {
                 source={{ uri: avatar }}
                 className="w-full h-full rounded-lg"
                 resizeMode="cover"
-                onError={(error) => {
-                  console.log("Avatar failed to load:", avatar, error);
-                  setAvatarError(true);
-                }}
-                onLoad={() => {
-                  console.log("Avatar loaded successfully:", avatar);
-                  setAvatarError(false);
-                }}
+                onError={() => setAvatarError(true)}
               />
             ) : (
               <View className="w-full h-full rounded-lg bg-secondary-100 flex justify-center items-center">
@@ -102,12 +84,6 @@ const VideoCard = ({ title, creator, avatar, thumbnail, video, prompt }) => {
           isLooping={false}
           progressUpdateIntervalMillis={500}
           preferredForwardBufferDuration={5}
-          onReadyForDisplay={() => {
-            console.log("Video ready for display");
-          }}
-          onLoad={() => {
-            console.log("Video loaded successfully");
-          }}
           onPlaybackStatusUpdate={(status) => {
             if (status.didJustFinish) {
               setPlay(false);

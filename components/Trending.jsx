@@ -61,12 +61,6 @@ const TrendingItem = ({ activeItem, item }) => {
           isLooping={false}
           progressUpdateIntervalMillis={500}
           preferredForwardBufferDuration={5}
-          onReadyForDisplay={() => {
-            console.log("Trending video ready");
-          }}
-          onLoad={() => {
-            console.log("Trending video loaded");
-          }}
           onPlaybackStatusUpdate={(status) => {
             if (status.didJustFinish) {
               setPlay(false);
