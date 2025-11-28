@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { ResizeMode, Video } from "expo-av";
 import { View, Text, TouchableOpacity, Image } from "react-native";
 
@@ -8,6 +8,7 @@ const VideoCard = ({ title, creator, avatar, thumbnail, video, prompt }) => {
   const [play, setPlay] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
+  const videoRef = useRef(null);
 
   // Debug logging to see what data we're receiving
   console.log("🎬 VideoCard props:", { 
@@ -77,38 +78,45 @@ const VideoCard = ({ title, creator, avatar, thumbnail, video, prompt }) => {
         </View>
       </View>
 
-      {play ? (
+      <TouchableOpacity
+        activeOpacity={0.7}
+        onPress={async () => {
+          if (!play && videoRef.current) {
+            await videoRef.current.playAsync();
+            setPlay(true);
+          }
+        }}
+        className="w-full h-60 rounded-xl mt-3 relative flex justify-center items-center"
+        disabled={play}
+      >
         <Video
+          ref={videoRef}
           source={{ uri: video }}
-          className="w-full h-60 rounded-xl mt-3"
+          posterSource={{ uri: thumbnail }}
+          usePoster
+          className="w-full h-60 rounded-xl"
           resizeMode={ResizeMode.CONTAIN}
-          useNativeControls
-          shouldPlay
+          useNativeControls={play}
+          shouldPlay={false}
+          isLooping={false}
+          progressUpdateIntervalMillis={500}
           onPlaybackStatusUpdate={(status) => {
             if (status.didJustFinish) {
               setPlay(false);
+              videoRef.current?.pauseAsync();
+              videoRef.current?.setPositionAsync(0);
             }
           }}
         />
-      ) : (
-        <TouchableOpacity
-          activeOpacity={0.7}
-          onPress={() => setPlay(true)}
-          className="w-full h-60 rounded-xl mt-3 relative flex justify-center items-center"
-        >
-          <Image
-            source={{ uri: thumbnail }}
-            className="w-full h-full rounded-xl mt-3"
-            resizeMode="cover"
-          />
 
+        {!play && (
           <Image
             source={icons.play}
             className="w-12 h-12 absolute"
             resizeMode="contain"
           />
-        </TouchableOpacity>
-      )}
+        )}
+      </TouchableOpacity>
       
       {/* Video Description Section */}
       {prompt && (

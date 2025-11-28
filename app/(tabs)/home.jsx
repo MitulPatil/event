@@ -111,6 +111,16 @@ const Home = () => {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
+        initialNumToRender={3}
+        maxToRenderPerBatch={3}
+        windowSize={5}
+        removeClippedSubviews={true}
+        updateCellsBatchingPeriod={50}
+        getItemLayout={(data, index) => ({
+          length: 400,
+          offset: 400 * index,
+          index,
+        })}
       />
     </SafeAreaView>
   );

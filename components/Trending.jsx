@@ -1,10 +1,9 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { ResizeMode, Video } from "expo-av";
 import * as Animatable from "react-native-animatable";
 import {
   FlatList,
   Image,
-  ImageBackground,
   TouchableOpacity,
 } from "react-native";
 
@@ -30,6 +29,7 @@ const zoomOut = {
 
 const TrendingItem = ({ activeItem, item }) => {
   const [play, setPlay] = useState(false);
+  const videoRef = useRef(null);
 
   return (
     <Animatable.View
@@ -37,40 +37,45 @@ const TrendingItem = ({ activeItem, item }) => {
       animation={activeItem === item.$id ? zoomIn : zoomOut}
       duration={500}
     >
-      {play ? (
+      <TouchableOpacity
+        className="relative flex justify-center items-center"
+        activeOpacity={0.7}
+        onPress={async () => {
+          if (!play && videoRef.current) {
+            await videoRef.current.playAsync();
+            setPlay(true);
+          }
+        }}
+        disabled={play}
+      >
         <Video
+          ref={videoRef}
           source={{ uri: item.video }}
-          className="w-52 h-72 rounded-[33px] mt-3 bg-white/10"
+          posterSource={{ uri: item.thumbnail }}
+          usePoster
+          className="w-52 h-72 rounded-[33px] my-5 bg-white/10"
           resizeMode={ResizeMode.CONTAIN}
-          useNativeControls
-          shouldPlay
+          useNativeControls={play}
+          shouldPlay={false}
+          isLooping={false}
+          progressUpdateIntervalMillis={500}
           onPlaybackStatusUpdate={(status) => {
             if (status.didJustFinish) {
               setPlay(false);
+              videoRef.current?.pauseAsync();
+              videoRef.current?.setPositionAsync(0);
             }
           }}
         />
-      ) : (
-        <TouchableOpacity
-          className="relative flex justify-center items-center"
-          activeOpacity={0.7}
-          onPress={() => setPlay(true)}
-        >
-          <ImageBackground
-            source={{
-              uri: item.thumbnail,
-            }}
-            className="w-52 h-72 rounded-[33px] my-5 overflow-hidden shadow-lg shadow-black/40"
-            resizeMode="cover"
-          />
 
+        {!play && (
           <Image
             source={icons.play}
             className="w-12 h-12 absolute"
             resizeMode="contain"
           />
-        </TouchableOpacity>
-      )}
+        )}
+      </TouchableOpacity>
     </Animatable.View>
   );
 };
