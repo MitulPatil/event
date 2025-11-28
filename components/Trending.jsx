@@ -53,12 +53,20 @@ const TrendingItem = ({ activeItem, item }) => {
           source={{ uri: item.video }}
           posterSource={{ uri: item.thumbnail }}
           usePoster
+          posterStyle={{ resizeMode: 'cover' }}
           className="w-52 h-72 rounded-[33px] my-5 bg-white/10"
           resizeMode={ResizeMode.CONTAIN}
           useNativeControls={play}
           shouldPlay={false}
           isLooping={false}
           progressUpdateIntervalMillis={500}
+          preferredForwardBufferDuration={5}
+          onReadyForDisplay={() => {
+            console.log("Trending video ready");
+          }}
+          onLoad={() => {
+            console.log("Trending video loaded");
+          }}
           onPlaybackStatusUpdate={(status) => {
             if (status.didJustFinish) {
               setPlay(false);

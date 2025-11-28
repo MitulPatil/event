@@ -17,16 +17,24 @@ const GlobalProvider = ({ children }) => {
   useEffect(() => {
     // Setup Appwrite email verification deep link handler
     setupVerificationLinkHandler();
+
+    // Set a maximum timeout for initial auth check
+    const authTimeout = setTimeout(() => {
+      console.log("⚠️ Auth check timed out, proceeding anyway...");
+      setLoading(false);
+    }, 3000); // 3 second max wait
+
     getCurrentUser()
       .then((res) => {
+        clearTimeout(authTimeout);
         if (res) {
           setIsLogged(true);
           setUser(res);
-          
+
           // Run diagnostics when user is logged in (only in debug mode)
           if (process.env.EXPO_PUBLIC_DEBUG_MODE === 'true') {
             console.log("🔍 Running creator relationship diagnostics...");
-            
+
             // Test Appwrite connection
             testAppwriteConnection()
               .then(result => {
@@ -41,7 +49,7 @@ const GlobalProvider = ({ children }) => {
               diagnoseCreatorIssues()
                 .then(result => {
                   console.log("🩺 Creator diagnosis completed:", result);
-                  
+
                   // If there are issues, log them prominently
                   if (result.diagnosis && result.diagnosis.orphanedPosts.length > 0) {
                     console.log("⚠️ CREATOR ISSUES DETECTED:");
@@ -60,9 +68,11 @@ const GlobalProvider = ({ children }) => {
         }
       })
       .catch((error) => {
-        console.log(error);
+        clearTimeout(authTimeout);
+        console.log("Auth check error:", error);
       })
       .finally(() => {
+        clearTimeout(authTimeout);
         setLoading(false);
       });
 

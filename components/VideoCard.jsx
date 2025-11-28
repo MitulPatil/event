@@ -94,12 +94,20 @@ const VideoCard = ({ title, creator, avatar, thumbnail, video, prompt }) => {
           source={{ uri: video }}
           posterSource={{ uri: thumbnail }}
           usePoster
+          posterStyle={{ resizeMode: 'cover' }}
           className="w-full h-60 rounded-xl"
           resizeMode={ResizeMode.CONTAIN}
           useNativeControls={play}
           shouldPlay={false}
           isLooping={false}
           progressUpdateIntervalMillis={500}
+          preferredForwardBufferDuration={5}
+          onReadyForDisplay={() => {
+            console.log("Video ready for display");
+          }}
+          onLoad={() => {
+            console.log("Video loaded successfully");
+          }}
           onPlaybackStatusUpdate={(status) => {
             if (status.didJustFinish) {
               setPlay(false);
